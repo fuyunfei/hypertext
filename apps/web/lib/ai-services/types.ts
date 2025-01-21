@@ -22,4 +22,8 @@ export interface DeepSeekResponse {
     completion_tokens: number;
     total_tokens: number;
   };
-} 
+}
+
+export interface QuestionAnswerResult {
+  answer: string;
+}

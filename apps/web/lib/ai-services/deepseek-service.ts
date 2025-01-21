@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import type { QuestionAnswerResult } from "./types";
 
 export interface KeywordExtractionResult {
   keywords: string[];
@@ -66,12 +67,12 @@ export class DeepSeekService {
    * @param text 输入文本
    * @returns 关键词列表
    */
-  async extractKeywords(text: string): Promise<any> {
+  async extractKeywords(text: string): Promise<KeywordExtractionResult> {
     const systemPrompt = `你是一个专业的文本分析助手。请从给定的文本中提取关键词。
     要求：
     1. 只返回关键词数组，格式为 JSON
-    2. 关键词数量控制在 3-7 个
-    3. 每个关键词长度不超过 4 个汉字或 8 个英文字符
+    2. 关键词数量控制在 3-5 个
+    3. 每个关键词长度不超过 4 个汉字或 8 个英文字符。同时不少于3哥汉字
     4. 关键词应该反映文本的核心主题和重要概念`;
 
     const userPrompt = `请分析以下文本并提取关键词：\n${text}`;
@@ -110,5 +111,19 @@ export class DeepSeekService {
       console.error("Failed to generate keyword insights:", error);
       throw new Error("Failed to generate keyword insights");
     }
+  }
+
+  async generateQuestionAnswer(question: string): Promise<QuestionAnswerResult> {
+    const systemPrompt =
+      "你是一个专业的问题回答助手。请根据问题提供专业、准确、详细的回答。回答要有深度但不要过长，控制在300字以内。请以JSON格式返回，使用 answer 字段包含回答内容。";
+    const userPrompt = question;
+
+    const response = await this.createChatCompletion(systemPrompt, userPrompt, {
+      temperature: 0.7,
+      max_tokens: 1000,
+    });
+
+    const result = JSON.parse(response);
+    return result;
   }
 }

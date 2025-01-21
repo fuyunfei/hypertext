@@ -50,15 +50,40 @@ export const KeywordTooltip: React.FC<KeywordTooltipProps> = ({ keyword, context
     fetchInsights();
   }, [keyword, context]);
 
-  const handleInsightClick = (insight: string) => {
+  const handleInsightClick = async (insight: string) => {
     if (!editor) return;
 
-    // 移动到文档末尾
-    editor.commands.setTextSelection(editor.state.doc.content.size);
-    // 插入新行和问题文本
-    editor.commands.insertContent(`\n${insight}`);
-    // 聚焦编辑器
-    editor.commands.focus();
+    try {
+      setLoading(true);
+      const response = await fetch("/api/question-answer", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ question: insight }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get answer");
+      }
+
+      const data = await response.json();
+
+      // 移动到文档末尾
+      editor.commands.setTextSelection(editor.state.doc.content.size);
+      // 插入问题和答案，添加额外的空行
+      editor.commands.insertContent(`\n\n问题：${insight}\n答案：${data.answer}`);
+      // 聚焦编辑器
+      editor.commands.focus();
+    } catch (err) {
+      console.error("Error getting answer:", err);
+      // 如果获取答案失败，仍然插入问题，同样添加额外的空行
+      editor.commands.setTextSelection(editor.state.doc.content.size);
+      editor.commands.insertContent(`\n\n${insight}`);
+      editor.commands.focus();
+    } finally {
+      setLoading(false);
+    }
   };
 
   return createPortal(
@@ -88,7 +113,7 @@ export const KeywordTooltip: React.FC<KeywordTooltipProps> = ({ keyword, context
           {error && <div className="text-red-500 text-sm">{error}</div>}
           {!loading &&
             !error &&
-            insights?.questions?.map((insight) => (
+            insights.map((insight) => (
               <button
                 type="button"
                 key={`insight-${insight}`}
