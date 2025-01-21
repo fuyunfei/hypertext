@@ -14,7 +14,7 @@ import {
   handleImageDrop,
   handleImagePaste,
 } from "novel";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { defaultExtensions } from "./extensions";
 import { ColorSelector } from "./selectors/color-selector";
@@ -23,24 +23,38 @@ import { MathSelector } from "./selectors/math-selector";
 import { NodeSelector } from "./selectors/node-selector";
 import { Separator } from "./ui/separator";
 
+import { KeywordHighlight } from "@/lib/extensions/keyword-highlight";
 import GenerativeMenuSwitch from "./generative/generative-menu-switch";
 import { uploadFn } from "./image-upload";
+import { KeywordTooltip } from "./keyword-tooltip";
 import { TextButtons } from "./selectors/text-buttons";
 import { slashCommand, suggestionItems } from "./slash-command";
 
 const hljs = require("highlight.js");
 
-const extensions = [...defaultExtensions, slashCommand];
+interface TailwindAdvancedEditorProps {
+  onEditorReady?: (editor: EditorInstance) => void;
+}
 
-const TailwindAdvancedEditor = () => {
+const TailwindAdvancedEditor = ({ onEditorReady }: TailwindAdvancedEditorProps) => {
   const [initialContent, setInitialContent] = useState<null | JSONContent>(null);
   const [saveStatus, setSaveStatus] = useState("Saved");
   const [charsCount, setCharsCount] = useState();
+  const [editor, setEditor] = useState<EditorInstance | null>(null);
+  const [isEditorReady, setIsEditorReady] = useState(false);
 
   const [openNode, setOpenNode] = useState(false);
   const [openColor, setOpenColor] = useState(false);
   const [openLink, setOpenLink] = useState(false);
   const [openAI, setOpenAI] = useState(false);
+
+  const [tooltipData, setTooltipData] = useState<{
+    keyword: string;
+    position: { x: number; y: number };
+  } | null>(null);
+
+  // 添加文本内容状态
+  const [storedText, setStoredText] = useState<string>("");
 
   //Apply Codeblock Highlighting on the HTML from editor.getHTML()
   const highlightCodeblocks = (content: string) => {
@@ -62,11 +76,83 @@ const TailwindAdvancedEditor = () => {
     setSaveStatus("Saved");
   }, 500);
 
+  const highlightKeywords = useCallback(
+    (keywords: string[]) => {
+      if (!editor) return;
+
+      try {
+        editor.commands.setKeywords(keywords);
+      } catch (error) {
+        console.error("Failed to highlight keywords:", error);
+      }
+    },
+    [editor],
+  );
+
+  const handleKeywordHover = useCallback((keyword: string, event: MouseEvent) => {
+    setTooltipData({
+      keyword,
+      position: { x: event.clientX, y: event.clientY },
+    });
+  }, []);
+
+  const handleKeywordLeave = useCallback(() => {
+    setTooltipData(null);
+  }, []);
+
+  // 创建扩展时就传入handlers
+  const extensions = useMemo(
+    () => [
+      ...defaultExtensions,
+      slashCommand,
+      KeywordHighlight.configure({
+        onHover: handleKeywordHover,
+        onLeave: handleKeywordLeave,
+      }),
+    ],
+    [handleKeywordHover, handleKeywordLeave],
+  );
+
   useEffect(() => {
     const content = window.localStorage.getItem("novel-content");
     if (content) setInitialContent(JSON.parse(content));
     else setInitialContent(defaultEditorContent);
   }, []);
+
+  useEffect(() => {
+    if (editor && onEditorReady && !isEditorReady) {
+      onEditorReady(editor);
+      setIsEditorReady(true);
+    }
+  }, [editor, onEditorReady, isEditorReady]);
+
+  // 添加文本内容事件监听
+  useEffect(() => {
+    const handleStoreText = (event: CustomEvent<{ text: string }>) => {
+      if (event.detail.text) {
+        setStoredText(event.detail.text);
+      }
+    };
+
+    window.addEventListener("store-text-content", handleStoreText as EventListener);
+    return () => {
+      window.removeEventListener("store-text-content", handleStoreText as EventListener);
+    };
+  }, []);
+
+  // 添加关键词高亮事件监听
+  useEffect(() => {
+    const handleHighlightKeywords = (event: CustomEvent<{ keywords: string[] }>) => {
+      if (event.detail.keywords) {
+        highlightKeywords(event.detail.keywords);
+      }
+    };
+
+    window.addEventListener("highlight-keywords", handleHighlightKeywords as EventListener);
+    return () => {
+      window.removeEventListener("highlight-keywords", handleHighlightKeywords as EventListener);
+    };
+  }, [highlightKeywords]);
 
   if (!initialContent) return null;
 
@@ -78,10 +164,20 @@ const TailwindAdvancedEditor = () => {
           {charsCount} Words
         </div>
       </div>
+      {tooltipData && (
+        <KeywordTooltip keyword={tooltipData.keyword} position={tooltipData.position} onClose={handleKeywordLeave} />
+      )}
       <EditorRoot>
         <EditorContent
           initialContent={initialContent}
           extensions={extensions}
+          onCreate={({ editor: editorInstance }) => {
+            setEditor(editorInstance);
+          }}
+          onUpdate={({ editor: editorInstance }) => {
+            debouncedUpdates(editorInstance);
+            setSaveStatus("Unsaved");
+          }}
           className="relative min-h-[500px] w-full max-w-screen-lg border-muted bg-background sm:mb-[calc(20vh)] sm:rounded-lg sm:border sm:shadow-lg"
           editorProps={{
             handleDOMEvents: {
@@ -93,10 +189,6 @@ const TailwindAdvancedEditor = () => {
               class:
                 "prose prose-lg dark:prose-invert prose-headings:font-title font-default focus:outline-none max-w-full",
             },
-          }}
-          onUpdate={({ editor }) => {
-            debouncedUpdates(editor);
-            setSaveStatus("Unsaved");
           }}
           slotAfter={<ImageResizer />}
         >
