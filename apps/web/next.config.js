@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   env: {
     DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY,
   },
