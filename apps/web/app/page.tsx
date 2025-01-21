@@ -24,6 +24,7 @@ interface KeywordResponse {
 interface GenerateResponse {
   content: string;
   keywords: string[];
+  insights: string[];
 }
 
 export default function Page() {
@@ -65,6 +66,7 @@ export default function Page() {
         detail: {
           keywords: result.keywords,
           context: result.content,
+          insights: result.insights,
         },
       });
       window.dispatchEvent(event);

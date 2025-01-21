@@ -57,6 +57,7 @@ const TailwindAdvancedEditor = ({ onEditorReady }: TailwindAdvancedEditorProps) 
   const [tooltipData, setTooltipData] = useState<{
     keyword: string;
     position: { x: number; y: number };
+    insights: string[];
   } | null>(null);
 
   const isTooltipVisibleRef = useRef(false);
@@ -67,6 +68,10 @@ const TailwindAdvancedEditor = ({ onEditorReady }: TailwindAdvancedEditorProps) 
 
   // 在组件内部添加一个state来存储文章内容
   const [articleContext, setArticleContext] = useState<string>("");
+
+  // 添加 insights 存储
+  const [keywordInsights, setKeywordInsights] = useState<Record<string, string[]>>({});
+  const keywordInsightsRef = useRef<Record<string, string[]>>({});
 
   //Apply Codeblock Highlighting on the HTML from editor.getHTML()
   const highlightCodeblocks = (content: string) => {
@@ -106,18 +111,29 @@ const TailwindAdvancedEditor = ({ onEditorReady }: TailwindAdvancedEditorProps) 
       clearTimeout(tooltipTimeoutRef.current);
     }
     isTooltipVisibleRef.current = true;
+
+    // 从 keywordInsights 中获取当前关键词的探讨点
+    const currentInsights = keywordInsightsRef.current[keyword] || [];
+
+    console.log("关键词悬停数据:", {
+      keyword,
+      allInsights: keywordInsightsRef.current,
+      currentKeywordInsights: currentInsights,
+    });
+
     setTooltipData({
       keyword,
       position: { x: event.clientX, y: event.clientY },
+      insights: currentInsights,
     });
   }, []);
 
   const handleKeywordLeave = useCallback(() => {
     isTooltipVisibleRef.current = false;
-    if (window.tooltipCloseTimer) {
-      clearTimeout(window.tooltipCloseTimer);
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current);
     }
-    window.tooltipCloseTimer = setTimeout(() => {
+    tooltipTimeoutRef.current = setTimeout(() => {
       if (!isTooltipVisibleRef.current) {
         setTooltipData(null);
       }
@@ -166,12 +182,18 @@ const TailwindAdvancedEditor = ({ onEditorReady }: TailwindAdvancedEditorProps) 
 
   // 修改关键词高亮事件监听
   useEffect(() => {
-    const handleHighlightKeywords = (event: CustomEvent<{ keywords: string[]; context: string }>) => {
-      if (event.detail.keywords) {
-        highlightKeywords(event.detail.keywords);
-        // 更新文章上下文
-        setArticleContext(event.detail.context);
-      }
+    const handleHighlightKeywords = (
+      event: CustomEvent<{
+        keywords: string[];
+        context: string;
+        insights: Record<string, string[]>;
+      }>,
+    ) => {
+      const { keywords, context, insights } = event.detail;
+      console.log("event detail = ", event.detail);
+      highlightKeywords(keywords);
+      setArticleContext(context);
+      keywordInsightsRef.current = insights;
     };
 
     window.addEventListener("highlight-keywords", handleHighlightKeywords as EventListener);
@@ -193,10 +215,11 @@ const TailwindAdvancedEditor = ({ onEditorReady }: TailwindAdvancedEditorProps) 
       {tooltipData && (
         <KeywordTooltip
           keyword={tooltipData.keyword}
-          context={articleContext}
+          insights={tooltipData.insights}
           position={tooltipData.position}
           onClose={() => setTooltipData(null)}
           editor={editor}
+          isTooltipVisibleRef={isTooltipVisibleRef}
         />
       )}
       <EditorRoot>
