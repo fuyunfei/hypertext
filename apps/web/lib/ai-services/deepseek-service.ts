@@ -9,6 +9,12 @@ interface KeywordInsightResult {
   insights: string[];
 }
 
+interface ArticleGenerationResult {
+  content: string;
+  keywords: string[];
+  insights: Record<string, string[]>;
+}
+
 export class DeepSeekService {
   private client: OpenAI;
   private static instance: DeepSeekService;
@@ -125,5 +131,39 @@ export class DeepSeekService {
 
     const result = JSON.parse(response);
     return result;
+  }
+
+  async generateShortArticle(prompt: string): Promise<ArticleGenerationResult> {
+    const systemPrompt = `你是一个专业的写作助手。请根据用户的提示生成一篇短文，并提供关键词分析。
+
+要求：
+1. 短文要求：
+   - 长度约500字
+   - 内容要专业、有深度、逻辑清晰
+   - 段落结构合理，易于阅读
+
+2. 关键词要求：
+   - 提取3-5个关键词
+   - 每个关键词3-8个汉字
+   - 关键词应该是文章中值得深入探讨的主题
+
+3. 每个关键词需要生成5个探讨点：
+   - 探讨点要有深度，涉及影响、意义、历史背景等多个维度
+   - 每个探讨点不超过30个字
+   - 问题要有思考性和启发性
+
+4. 返回格式(JSON)：
+{
+  "content": "文章内容...",
+  "keywords": ["关键词1", "关键词2", ...],
+  "insights": {
+    "关键词1": ["探讨点1", "探讨点2", ...],
+    "关键词2": ["探讨点1", "探讨点2", ...],
+    ...
+  }
+}`;
+
+    const content = await this.createChatCompletion(systemPrompt, prompt);
+    return JSON.parse(content) as ArticleGenerationResult;
   }
 }

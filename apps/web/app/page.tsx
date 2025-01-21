@@ -2,8 +2,9 @@
 
 import TailwindAdvancedEditor from "@/components/tailwind/advanced-editor";
 import { Button } from "@/components/tailwind/ui/button";
+import { Input } from "@/components/tailwind/ui/input";
 import Menu from "@/components/tailwind/ui/menu";
-import { KeyRound } from "lucide-react";
+import { Wand2 } from "lucide-react";
 import Link from "next/link";
 import type { EditorInstance } from "novel";
 import { useState } from "react";
@@ -20,9 +21,59 @@ interface KeywordResponse {
   keywords: string[];
 }
 
+interface GenerateResponse {
+  content: string;
+  keywords: string[];
+}
+
 export default function Page() {
   const [isExtracting, setIsExtracting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [editor, setEditor] = useState<EditorInstance | null>(null);
+  const [prompt, setPrompt] = useState("");
+
+  const handleGenerate = async () => {
+    try {
+      if (!editor || !prompt) {
+        console.error("编辑器实例未初始化或提示词为空");
+        return;
+      }
+
+      setIsGenerating(true);
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`生成失败: ${response.statusText}`);
+      }
+
+      const result = (await response.json()) as GenerateResponse;
+
+      // 清空编辑器内容
+      editor.commands.clearContent();
+
+      // 插入生成的内容
+      editor.commands.insertContent(result.content);
+
+      // 触发关键词高亮事件
+      const event = new CustomEvent("highlight-keywords", {
+        detail: {
+          keywords: result.keywords,
+          context: result.content,
+        },
+      });
+      window.dispatchEvent(event);
+    } catch (error) {
+      console.error("生成失败:", error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const handleExtractKeywords = async () => {
     try {
@@ -56,11 +107,9 @@ export default function Page() {
 
       const result = (await response.json()) as KeywordResponse;
 
-      console.log("result = ", result);
       if (!Array.isArray(result.keywords)) {
         throw new Error("Invalid keywords format received");
       }
-      console.log("result = ", result);
 
       // 存储文本内容
       const textEvent = new CustomEvent("store-text-content", {
@@ -68,7 +117,7 @@ export default function Page() {
       });
       window.dispatchEvent(textEvent);
 
-      // 触发关键词高亮事件，同时传递文本内容
+      // 触发关键词高亮事件
       const event = new CustomEvent("highlight-keywords", {
         detail: {
           keywords: result.keywords,
@@ -107,10 +156,22 @@ export default function Page() {
 
       <div className="w-full max-w-screen-lg px-4 mb-4">
         <div className="flex items-center gap-2 border-b pb-2">
-          <Button onClick={handleExtractKeywords} disabled={isExtracting} className="flex items-center gap-2">
+          <div className="flex-1">
+            <Input
+              placeholder="输入提示词生成短文..."
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <Button onClick={handleGenerate} disabled={isGenerating || !prompt} className="flex items-center gap-2">
+            <Wand2 className="h-4 w-4" />
+            {isGenerating ? "生成中..." : "生成短文"}
+          </Button>
+          {/* <Button onClick={handleExtractKeywords} disabled={isExtracting} className="flex items-center gap-2">
             <KeyRound className="h-4 w-4" />
             {isExtracting ? "提取中..." : "提取关键词"}
-          </Button>
+          </Button> */}
         </div>
       </div>
 

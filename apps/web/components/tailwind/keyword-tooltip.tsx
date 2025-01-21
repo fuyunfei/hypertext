@@ -71,8 +71,14 @@ export const KeywordTooltip: React.FC<KeywordTooltipProps> = ({ keyword, context
 
       // 移动到文档末尾
       editor.commands.setTextSelection(editor.state.doc.content.size);
-      // 插入问题和答案，添加额外的空行
-      editor.commands.insertContent(`\n\n问题：${insight}\n答案：${data.answer}`);
+      // 插入问题、分隔线和答案
+      editor.commands.insertContent(`
+
+---
+
+${data.answer}
+
+`);
       // 聚焦编辑器
       editor.commands.focus();
     } catch (err) {
