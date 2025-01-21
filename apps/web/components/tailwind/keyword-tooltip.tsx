@@ -1,3 +1,4 @@
+import type { Editor } from "@tiptap/core";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -6,13 +7,14 @@ interface KeywordTooltipProps {
   context: string;
   position: { x: number; y: number };
   onClose: () => void;
+  editor: Editor | null;
 }
 
 interface KeywordInsights {
   insights: string[];
 }
 
-export const KeywordTooltip: React.FC<KeywordTooltipProps> = ({ keyword, context, position, onClose }) => {
+export const KeywordTooltip: React.FC<KeywordTooltipProps> = ({ keyword, context, position, onClose, editor }) => {
   const [insights, setInsights] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +50,16 @@ export const KeywordTooltip: React.FC<KeywordTooltipProps> = ({ keyword, context
     fetchInsights();
   }, [keyword, context]);
 
-  console.log("insights = ", insights);
+  const handleInsightClick = (insight: string) => {
+    if (!editor) return;
+
+    // 移动到文档末尾
+    editor.commands.setTextSelection(editor.state.doc.content.size);
+    // 插入新行和问题文本
+    editor.commands.insertContent(`\n${insight}`);
+    // 聚焦编辑器
+    editor.commands.focus();
+  };
 
   return createPortal(
     <div
@@ -58,13 +69,11 @@ export const KeywordTooltip: React.FC<KeywordTooltipProps> = ({ keyword, context
         top: `${position.y + 10}px`,
       }}
       onMouseEnter={() => {
-        // 鼠标进入弹窗时，清除任何可能的关闭计时器
         if (window.tooltipCloseTimer) {
           clearTimeout(window.tooltipCloseTimer);
         }
       }}
       onMouseLeave={() => {
-        // 鼠标离开弹窗时关闭
         onClose();
       }}
     >
@@ -79,10 +88,20 @@ export const KeywordTooltip: React.FC<KeywordTooltipProps> = ({ keyword, context
           {error && <div className="text-red-500 text-sm">{error}</div>}
           {!loading &&
             !error &&
-            insights?.questions?.map((insight, index) => (
-              <div key={index} className="text-sm text-gray-700 hover:bg-gray-50 p-1 rounded">
+            insights?.questions?.map((insight) => (
+              <button
+                type="button"
+                key={`insight-${insight}`}
+                className="w-full text-left text-sm text-gray-700 hover:bg-gray-50 p-1 rounded cursor-pointer transition-colors"
+                onClick={() => handleInsightClick(insight)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    handleInsightClick(insight);
+                  }
+                }}
+              >
                 {insight}
-              </div>
+              </button>
             ))}
         </div>
       </div>

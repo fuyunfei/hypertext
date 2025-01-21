@@ -196,6 +196,7 @@ const TailwindAdvancedEditor = ({ onEditorReady }: TailwindAdvancedEditorProps) 
           context={articleContext}
           position={tooltipData.position}
           onClose={() => setTooltipData(null)}
+          editor={editor}
         />
       )}
       <EditorRoot>

@@ -42,8 +42,6 @@ export default function Page() {
         return acc;
       }, "");
 
-      console.log("textContent = ", textContent);
-
       const response = await fetch("/api/extract-keywords", {
         method: "POST",
         headers: {
