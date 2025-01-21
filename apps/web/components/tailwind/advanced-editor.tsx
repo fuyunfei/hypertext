@@ -59,6 +59,9 @@ const TailwindAdvancedEditor = ({ onEditorReady }: TailwindAdvancedEditorProps) 
   // 添加文本内容状态
   const [storedText, setStoredText] = useState<string>("");
 
+  // 在组件内部添加一个state来存储文章内容
+  const [articleContext, setArticleContext] = useState<string>("");
+
   //Apply Codeblock Highlighting on the HTML from editor.getHTML()
   const highlightCodeblocks = (content: string) => {
     const doc = new DOMParser().parseFromString(content, "text/html");
@@ -174,11 +177,13 @@ const TailwindAdvancedEditor = ({ onEditorReady }: TailwindAdvancedEditorProps) 
     };
   }, []);
 
-  // 添加关键词高亮事件监听
+  // 修改关键词高亮事件监听
   useEffect(() => {
-    const handleHighlightKeywords = (event: CustomEvent<{ keywords: string[] }>) => {
+    const handleHighlightKeywords = (event: CustomEvent<{ keywords: string[]; context: string }>) => {
       if (event.detail.keywords) {
         highlightKeywords(event.detail.keywords);
+        // 更新文章上下文
+        setArticleContext(event.detail.context);
       }
     };
 
@@ -201,10 +206,9 @@ const TailwindAdvancedEditor = ({ onEditorReady }: TailwindAdvancedEditorProps) 
       {tooltipData && (
         <KeywordTooltip
           keyword={tooltipData.keyword}
+          context={articleContext}
           position={tooltipData.position}
           onClose={() => setTooltipData(null)}
-          onMouseEnter={handleTooltipMouseEnter}
-          onMouseLeave={handleTooltipMouseLeave}
         />
       )}
       <EditorRoot>

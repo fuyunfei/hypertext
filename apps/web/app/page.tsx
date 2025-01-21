@@ -34,6 +34,7 @@ export default function Page() {
 
       setIsExtracting(true);
       const jsonContent = editor.getJSON();
+
       const textContent = (jsonContent.content as NovelContent[]).reduce((acc, node) => {
         if (node.type === "paragraph" && node.content) {
           return `${acc} ${node.content.map((c) => c.text || "").join("")}`;
@@ -69,9 +70,12 @@ export default function Page() {
       });
       window.dispatchEvent(textEvent);
 
-      // 触发关键词高亮事件
+      // 触发关键词高亮事件，同时传递文本内容
       const event = new CustomEvent("highlight-keywords", {
-        detail: { keywords: result.keywords },
+        detail: {
+          keywords: result.keywords,
+          context: textContent,
+        },
       });
       window.dispatchEvent(event);
     } catch (error) {

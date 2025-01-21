@@ -4,6 +4,10 @@ export interface KeywordExtractionResult {
   keywords: string[];
 }
 
+interface KeywordInsightResult {
+  insights: string[];
+}
+
 export class DeepSeekService {
   private client: OpenAI;
   private static instance: DeepSeekService;
@@ -84,6 +88,27 @@ export class DeepSeekService {
     } catch (error) {
       console.error("关键词提取失败:", error);
       return null;
+    }
+  }
+
+  async generateKeywordInsights(keyword: string, context: string): Promise<KeywordInsightResult> {
+    const systemPrompt = `你是一个专业的内容分析助手。你的任务是基于给定的关键词和上下文，生成5个有见地的问题或探讨点。
+   这些问题应该：
+    - 深入探讨关键词的核心概念
+    - 涉及其影响、意义、历史背景等多个维度
+    - 具有思考性和启发性
+    - 问题应该简洁明了，每个问题不超过30个字`;
+
+    const userPrompt = `关键词：${keyword}\n上下文：${context}\n请生成5个关于这个关键词的深度问题或探讨点。以JSON数组格式返回，只返回问题列表，不要其他内容。`;
+
+    try {
+      const response = await this.createChatCompletion(systemPrompt, userPrompt, { temperature: 0.7 });
+
+      const insights = JSON.parse(response) as string[];
+      return { insights };
+    } catch (error) {
+      console.error("Failed to generate keyword insights:", error);
+      throw new Error("Failed to generate keyword insights");
     }
   }
 }
