@@ -15,6 +15,7 @@ interface KeywordTooltipProps {
   onClose: () => void;
   editor: Editor | null;
   isTooltipVisibleRef: { current: boolean };
+  onInsightSelect?: (insight: string) => void;
 }
 
 export const KeywordTooltip: React.FC<KeywordTooltipProps> = ({
@@ -24,6 +25,7 @@ export const KeywordTooltip: React.FC<KeywordTooltipProps> = ({
   onClose,
   editor,
   isTooltipVisibleRef,
+  onInsightSelect,
 }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,13 +42,20 @@ export const KeywordTooltip: React.FC<KeywordTooltipProps> = ({
   const handleInsightClick = (insight: string) => {
     if (!editor) return;
 
-    // 在编辑器末尾添加探讨点
+    // 先清空编辑器内容
+    editor.commands.clearContent();
+
+    // 调用新的回调函数
+    if (onInsightSelect) {
+      onInsightSelect(insight);
+    }
+
+    // 保留原有的功能
     editor.commands.setTextSelection(editor.state.doc.content.size);
     editor.commands.insertContent(`\n${insight}`);
     editor.commands.focus();
   };
 
-  // 使用 React Portal 确保提示框显示在最上层
   return createPortal(
     <div
       className="fixed z-[9999] bg-white rounded-lg shadow-lg p-4 max-w-sm"

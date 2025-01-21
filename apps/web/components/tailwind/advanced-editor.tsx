@@ -34,6 +34,7 @@ const hljs = require("highlight.js");
 
 interface TailwindAdvancedEditorProps {
   onEditorReady?: (editor: EditorInstance) => void;
+  onInsightSelect?: (insight: string) => void;
 }
 
 declare global {
@@ -42,7 +43,7 @@ declare global {
   }
 }
 
-const TailwindAdvancedEditor = ({ onEditorReady }: TailwindAdvancedEditorProps) => {
+const TailwindAdvancedEditor = ({ onEditorReady, onInsightSelect }: TailwindAdvancedEditorProps) => {
   const [initialContent, setInitialContent] = useState<null | JSONContent>(null);
   const [saveStatus, setSaveStatus] = useState("Saved");
   const [charsCount, setCharsCount] = useState();
@@ -220,6 +221,7 @@ const TailwindAdvancedEditor = ({ onEditorReady }: TailwindAdvancedEditorProps) 
           onClose={() => setTooltipData(null)}
           editor={editor}
           isTooltipVisibleRef={isTooltipVisibleRef}
+          onInsightSelect={onInsightSelect}
         />
       )}
       <EditorRoot>

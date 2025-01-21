@@ -33,6 +33,11 @@ export default function Page() {
   const [editor, setEditor] = useState<EditorInstance | null>(null);
   const [prompt, setPrompt] = useState("");
 
+  const handleInsightSelect = (insight: string) => {
+    setPrompt(insight);
+    handleGenerate();
+  };
+
   const handleGenerate = async () => {
     try {
       if (!editor || !prompt) {
@@ -168,7 +173,7 @@ export default function Page() {
           </div>
           <Button onClick={handleGenerate} disabled={isGenerating || !prompt} className="flex items-center gap-2">
             <Wand2 className="h-4 w-4" />
-            {isGenerating ? "生成中..." : "生成短文"}
+            {isGenerating ? <span className="animate-pulse">生成中...</span> : "生成短文"}
           </Button>
           {/* <Button onClick={handleExtractKeywords} disabled={isExtracting} className="flex items-center gap-2">
             <KeyRound className="h-4 w-4" />
@@ -178,7 +183,7 @@ export default function Page() {
       </div>
 
       <div className="w-full max-w-screen-lg">
-        <TailwindAdvancedEditor onEditorReady={setEditor} />
+        <TailwindAdvancedEditor onEditorReady={setEditor} onInsightSelect={handleInsightSelect} />
       </div>
     </div>
   );
