@@ -11,6 +11,8 @@ interface KeywordTooltipProps {
   keyword: string;
   position: { x: number; y: number };
   onClose: () => void;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
 }
 
 // 模拟异步数据加载
@@ -27,7 +29,13 @@ const mockFetchData = async (keyword: string): Promise<KeywordData[]> => {
   ];
 };
 
-export const KeywordTooltip: React.FC<KeywordTooltipProps> = ({ keyword, position, onClose }) => {
+export const KeywordTooltip: React.FC<KeywordTooltipProps> = ({
+  keyword,
+  position,
+  onClose,
+  onMouseEnter,
+  onMouseLeave,
+}) => {
   const [data, setData] = useState<KeywordData[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -54,13 +62,8 @@ export const KeywordTooltip: React.FC<KeywordTooltipProps> = ({ keyword, positio
         left: `${position.x}px`,
         top: `${position.y + 20}px`,
       }}
-      onMouseEnter={(e) => {
-        e.stopPropagation();
-      }}
-      onMouseLeave={(e) => {
-        e.stopPropagation();
-        onClose();
-      }}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       <div className="font-bold mb-2 text-gray-800">{keyword}</div>
 

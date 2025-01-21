@@ -14,7 +14,7 @@ import {
   handleImageDrop,
   handleImagePaste,
 } from "novel";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { defaultExtensions } from "./extensions";
 import { ColorSelector } from "./selectors/color-selector";
@@ -53,6 +53,9 @@ const TailwindAdvancedEditor = ({ onEditorReady }: TailwindAdvancedEditorProps) 
     position: { x: number; y: number };
   } | null>(null);
 
+  const isTooltipVisibleRef = useRef(false);
+  const tooltipTimeoutRef = useRef<NodeJS.Timeout>();
+
   // 添加文本内容状态
   const [storedText, setStoredText] = useState<string>("");
 
@@ -90,6 +93,10 @@ const TailwindAdvancedEditor = ({ onEditorReady }: TailwindAdvancedEditorProps) 
   );
 
   const handleKeywordHover = useCallback((keyword: string, event: MouseEvent) => {
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current);
+    }
+    isTooltipVisibleRef.current = true;
     setTooltipData({
       keyword,
       position: { x: event.clientX, y: event.clientY },
@@ -97,7 +104,34 @@ const TailwindAdvancedEditor = ({ onEditorReady }: TailwindAdvancedEditorProps) 
   }, []);
 
   const handleKeywordLeave = useCallback(() => {
-    setTooltipData(null);
+    isTooltipVisibleRef.current = false;
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current);
+    }
+    tooltipTimeoutRef.current = setTimeout(() => {
+      if (!isTooltipVisibleRef.current) {
+        setTooltipData(null);
+      }
+    }, 300);
+  }, []);
+
+  const handleTooltipMouseEnter = useCallback(() => {
+    isTooltipVisibleRef.current = true;
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current);
+    }
+  }, []);
+
+  const handleTooltipMouseLeave = useCallback(() => {
+    isTooltipVisibleRef.current = false;
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current);
+    }
+    tooltipTimeoutRef.current = setTimeout(() => {
+      if (!isTooltipVisibleRef.current) {
+        setTooltipData(null);
+      }
+    }, 300);
   }, []);
 
   // 创建扩展时就传入handlers
@@ -165,7 +199,13 @@ const TailwindAdvancedEditor = ({ onEditorReady }: TailwindAdvancedEditorProps) 
         </div>
       </div>
       {tooltipData && (
-        <KeywordTooltip keyword={tooltipData.keyword} position={tooltipData.position} onClose={handleKeywordLeave} />
+        <KeywordTooltip
+          keyword={tooltipData.keyword}
+          position={tooltipData.position}
+          onClose={() => setTooltipData(null)}
+          onMouseEnter={handleTooltipMouseEnter}
+          onMouseLeave={handleTooltipMouseLeave}
+        />
       )}
       <EditorRoot>
         <EditorContent
