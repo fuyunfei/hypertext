@@ -3,6 +3,9 @@
   "globalDependencies": [
     "**/.env.*local"
   ],
+  "globalEnv": [
+    "OPENAI_API_KEY"
+  ],
   "tasks": {
     "topo": {
       "dependsOn": [
@@ -11,8 +14,7 @@
     },
     "build": {
       "dependsOn": [
-        "^build",
-        "typecheck"
+        "^build"
       ],
       "outputs": [
         "dist/**",
