@@ -57,6 +57,16 @@ export const KeywordTooltip: React.FC<KeywordTooltipProps> = ({ keyword, context
         left: `${position.x + 10}px`,
         top: `${position.y + 10}px`,
       }}
+      onMouseEnter={() => {
+        // 鼠标进入弹窗时，清除任何可能的关闭计时器
+        if (window.tooltipCloseTimer) {
+          clearTimeout(window.tooltipCloseTimer);
+        }
+      }}
+      onMouseLeave={() => {
+        // 鼠标离开弹窗时关闭
+        onClose();
+      }}
     >
       <div className="relative">
         <h3 className="text-lg font-semibold mb-2">{keyword}</h3>

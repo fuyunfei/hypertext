@@ -36,6 +36,12 @@ interface TailwindAdvancedEditorProps {
   onEditorReady?: (editor: EditorInstance) => void;
 }
 
+declare global {
+  interface Window {
+    tooltipCloseTimer: NodeJS.Timeout | undefined;
+  }
+}
+
 const TailwindAdvancedEditor = ({ onEditorReady }: TailwindAdvancedEditorProps) => {
   const [initialContent, setInitialContent] = useState<null | JSONContent>(null);
   const [saveStatus, setSaveStatus] = useState("Saved");
@@ -108,29 +114,10 @@ const TailwindAdvancedEditor = ({ onEditorReady }: TailwindAdvancedEditorProps) 
 
   const handleKeywordLeave = useCallback(() => {
     isTooltipVisibleRef.current = false;
-    if (tooltipTimeoutRef.current) {
-      clearTimeout(tooltipTimeoutRef.current);
+    if (window.tooltipCloseTimer) {
+      clearTimeout(window.tooltipCloseTimer);
     }
-    tooltipTimeoutRef.current = setTimeout(() => {
-      if (!isTooltipVisibleRef.current) {
-        setTooltipData(null);
-      }
-    }, 300);
-  }, []);
-
-  const handleTooltipMouseEnter = useCallback(() => {
-    isTooltipVisibleRef.current = true;
-    if (tooltipTimeoutRef.current) {
-      clearTimeout(tooltipTimeoutRef.current);
-    }
-  }, []);
-
-  const handleTooltipMouseLeave = useCallback(() => {
-    isTooltipVisibleRef.current = false;
-    if (tooltipTimeoutRef.current) {
-      clearTimeout(tooltipTimeoutRef.current);
-    }
-    tooltipTimeoutRef.current = setTimeout(() => {
+    window.tooltipCloseTimer = setTimeout(() => {
       if (!isTooltipVisibleRef.current) {
         setTooltipData(null);
       }
