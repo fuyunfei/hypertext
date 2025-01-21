@@ -113,7 +113,7 @@ export const KeywordTooltip: React.FC<KeywordTooltipProps> = ({ keyword, context
           {error && <div className="text-red-500 text-sm">{error}</div>}
           {!loading &&
             !error &&
-            insights.map((insight) => (
+            insights?.questions?.map((insight) => (
               <button
                 type="button"
                 key={`insight-${insight}`}
