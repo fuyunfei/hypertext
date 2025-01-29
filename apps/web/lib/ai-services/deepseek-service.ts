@@ -23,7 +23,6 @@ export class DeepSeekService {
     this.client = new OpenAI({
       apiKey: process.env.DEEPSEEK_API_KEY,
       baseURL: "https://api.groq.com/openai/v1",
-      // baseURL: "https://api.deepseek.com/v1",
     });
   }
 
