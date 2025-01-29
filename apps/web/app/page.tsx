@@ -155,10 +155,10 @@ export default function Page() {
             </ScrollArea>
           </DialogContent>
         </Dialog> */}
-        <Link href="/docs" className="ml-auto">
+        {/* <Link href="/docs" className="ml-auto">
           <Button variant="ghost">Documentation</Button>
         </Link>
-        <Menu />
+        <Menu /> */}
       </div>
 
       <div className="w-full max-w-screen-lg px-4 mb-4">
