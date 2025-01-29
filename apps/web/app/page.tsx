@@ -8,6 +8,7 @@ import { Wand2 } from "lucide-react";
 import Link from "next/link";
 import type { EditorInstance } from "novel";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface NovelContent {
   type: string;
@@ -41,7 +42,7 @@ export default function Page() {
   const handleGenerate = async () => {
     try {
       if (!editor || !prompt) {
-        console.error("编辑器实例未初始化或提示词为空");
+        toast.error("请先输入提示词");
         return;
       }
 
@@ -58,7 +59,12 @@ export default function Page() {
         throw new Error(`生成失败: ${response.statusText}`);
       }
 
-      const result = (await response.json()) as GenerateResponse;
+      const result = await response.json();
+
+      // Validate response structure
+      if (!result.content || !Array.isArray(result.keywords) || !Array.isArray(result.insights)) {
+        throw new Error("服务器返回数据格式错误");
+      }
 
       // 清空编辑器内容
       editor.commands.clearContent();
@@ -75,8 +81,14 @@ export default function Page() {
         },
       });
       window.dispatchEvent(event);
+
+      // Show success message
+      toast.success("内容生成成功");
+
     } catch (error) {
       console.error("生成失败:", error);
+      // Show error message to user
+      toast.error(error instanceof Error ? error.message : "生成内容时发生错误，请稍后重试");
     } finally {
       setIsGenerating(false);
     }
