@@ -62,7 +62,7 @@ export default function Page() {
       const result = await response.json();
 
       // Validate response structure
-      if (!result.content || !Array.isArray(result.keywords) || !Array.isArray(result.insights)) {
+      if (!result.content || !Array.isArray(result.keywords) || !result.insights) {
         throw new Error("服务器返回数据格式错误");
       }
 
