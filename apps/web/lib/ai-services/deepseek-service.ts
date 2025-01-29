@@ -44,7 +44,7 @@ export class DeepSeekService {
   ): Promise<string> {
     try {
       const response = await this.client.chat.completions.create({
-        model: options?.model || "deepseek-chat",
+        model: "llama-3.1-8b-instant",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
