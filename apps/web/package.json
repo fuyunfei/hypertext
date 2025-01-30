@@ -30,6 +30,7 @@
     "cmdk": "^1.0.4",
     "eventsource-parser": "^1.1.2",
     "highlight.js": "^11.9.0",
+    "https-proxy-agent": "^7.0.6",
     "lowlight": "^3.1.0",
     "lucide-react": "^0.358.0",
     "next": "15.1.4",

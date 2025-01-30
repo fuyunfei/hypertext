@@ -1,3 +1,4 @@
+import { HttpsProxyAgent } from "https-proxy-agent";
 import OpenAI from "openai";
 import type { QuestionAnswerResult } from "./types";
 
@@ -20,9 +21,14 @@ export class DeepSeekService {
   private static instance: DeepSeekService;
 
   private constructor() {
+    let agent = null;
+    if (process.env.NODE_ENV === "development") {
+      agent = new HttpsProxyAgent("http://127.0.0.1:7890");
+    }
     this.client = new OpenAI({
       apiKey: process.env.DEEPSEEK_API_KEY,
       baseURL: "https://api.groq.com/openai/v1",
+      httpAgent: agent, // 设置代理
     });
   }
 
