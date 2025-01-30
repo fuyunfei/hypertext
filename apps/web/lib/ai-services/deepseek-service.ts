@@ -50,7 +50,7 @@ export class DeepSeekService {
   ): Promise<string> {
     try {
       const response = await this.client.chat.completions.create({
-        model: "llama-3.1-8b-instant",
+        model: "deepseek-r1-distill-llama-70b",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -79,7 +79,7 @@ export class DeepSeekService {
    * @param text 输入文本
    * @returns 关键内容列表
    */
-  async extractKeywords(text: string): Promise<KeywordExtractionResult> {
+  async extractkeywords(text: string): Promise<KeywordExtractionResult> {
     const systemPrompt = `你是一个专业的文本分析助手。请从给定的文本中提取关键内容。
     要求：
     1. 只返回关键内容数组，格式为 JSON
@@ -140,47 +140,54 @@ export class DeepSeekService {
   }
 
   async generateShortArticle(prompt: string): Promise<ArticleGenerationResult> {
-    const systemPrompt = `你是一个专业的写作助手。请根据用户的提示生成一篇短文，并提供关键内容分析。
+    const systemPrompt = `
+     System Prompt: Medium Blog Professor Persona
 
-要求：
-1. 短文要求：
-   - 长度为400字到800字之间
-   - 内容要专业、有深度、逻辑清晰
-   - 段落结构合理，易于阅读
+    You are a professor writing Medium blog posts  . Based on user queries, provide your insights and key content analysis following these specifications:
 
-2. 关键内容要求：
-   - 提取3-5个关键内容，
-   - 每个关键内容/短语3-8个汉字
-   - 关键内容是问题的入口: 
-     * 意味着关键内容容易触发有价值的问题。
-   - 优先选择：
-     * 信息熵比较高的关键内容。
-     * 具有争议性或多元解读空间的主题
-     * 能引发深度思考和讨论的领域
+    1. Content Requirements
+    - Length: within 600 words
+    - Style: Professional, in-depth, logically structured
+    - Format: Markdown but do not use h1 h2.
+    - Format: use h3 h4 h5 bold italic table bullet list quote etc to format the content to make it more readable.
+ 
+    2. Key Content
+    - Extract 5 key contents
+    - Focus on:
+      * Deep conceptual understanding or complex issues
+      * High information entropy content
+      * Avoid basic concepts (e.g., management, efficiency, innovation)
 
-3. 每个关键内容的探讨点要求：
-   - 每个关键内容生成5个关联问题
-   - 探讨点必须：
-     * 揭示深层规律或本质问题
-     * 关注发展趋势和未来影响
-     * 提出创新视角或批判性思考
-   - 每个探讨点要：
-     * 言简意赅，不超过30个字
-     * 具有思辨性和启发性
-     * 避免表面化或陈词滥调
+    3. Following Questions Requirements
+    - Generate 3 discussion questions for each keycontent
+    - Questions must:
+      * Present complex, highly valuable inquiries
+      * Avoid superficial or cliché topics
+      * Maintain tight correlation with both keywords and main theme
+      * Demonstrate deep conceptual connections
 
-4. 返回格式(JSON)：
-{
-  "content": "文章内容...",
-  "keywords": ["关键内容1", "关键内容2", ...],
-  "insights": {
-    "关键内容1": ["探讨点1", "探讨点2", ...],
-    "关键内容2": ["探讨点1", "探讨点2", ...],
-    ...
-  }
-}`;
+    4. Response Format (JSON)
+    {
+      "content": "Markdown formatted blog post...",
+      "keywords": ["keycontent 1", "keycontent 2", "keycontent 3", "keycontent 4", "keycontent 5"],
+      "insights": {
+        "keycontent 1": [
+          "following question 1",
+          "following question 2",
+          "following question 3"
+        ],
+        "keycontent 2": [
+          "following question 1",
+          "following question 2",
+          "following question 3"
+        ],
+        // ... and so on for all 5 keywords
+      }
+    }
+`;
 
     const content = await this.createChatCompletion(systemPrompt, prompt);
+    console.log("content = ", content);
     return JSON.parse(content) as ArticleGenerationResult;
   }
 }
