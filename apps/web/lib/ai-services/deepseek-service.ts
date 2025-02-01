@@ -43,7 +43,7 @@ Please respond in JSON format with the following structure:
   }
 }
 
-IMPORTANT: The content should be no more than {maxWords} words long.`;
+IMPORTANT: The content should be no more than {maxWords} words long , reponse in the language of the user query`;
 
 interface ArticleGenerationResult {
   content: string;

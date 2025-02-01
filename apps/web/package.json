@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.1.0",
+    "@anthropic-ai/sdk": "^0.36.3",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-popover": "^1.0.7",
     "@radix-ui/react-scroll-area": "^1.0.5",
@@ -19,7 +20,9 @@
     "@radix-ui/react-separator": "^1.0.3",
     "@radix-ui/react-slider": "^1.2.2",
     "@radix-ui/react-slot": "^1.0.2",
+    "@radix-ui/react-switch": "^1.1.2",
     "@tailwindcss/typography": "^0.5.10",
+    "@types/xml2js": "^0.4.14",
     "@upstash/ratelimit": "^1.0.1",
     "@vercel/analytics": "^1.2.2",
     "@vercel/blob": "^0.22.1",
@@ -35,6 +38,7 @@
     "https-proxy-agent": "^7.0.6",
     "lowlight": "^3.1.0",
     "lucide-react": "^0.358.0",
+    "marked": "^15.0.6",
     "next": "15.1.4",
     "next-themes": "^0.2.1",
     "novel": "workspace:*",
@@ -48,7 +52,8 @@
     "tippy.js": "^6.3.7",
     "ts-pattern": "^5.0.8",
     "typescript": "^5.4.2",
-    "use-debounce": "^10.0.0"
+    "use-debounce": "^10.0.0",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.7.2",
